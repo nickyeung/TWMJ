@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>台灣牌計番</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;700;900&family=Oswald:wght@500;700&display=swap');
+:root{
+  --g1:#122d1a;--g2:#1b4826;--gold:#c9a84c;--gold2:#e8c96a;
+  --red:#c0392b;--ivory:#f4eed9;--ivory2:#c8bfa6;--dark:#0b1d11;
+  --panel:rgba(8,22,13,0.88);--border:rgba(201,168,76,0.25);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'Noto Serif TC',serif;min-height:100vh;color:var(--ivory);
+  background:radial-gradient(ellipse at 50% 0%,#2a5c38 0%,#163a22 40%,#0b1d11 100%);
+  padding-bottom:60px}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.07) 0px,rgba(0,0,0,.07) 1px,transparent 1px,transparent 4px),
+  repeating-linear-gradient(90deg,rgba(0,0,0,.04) 0px,rgba(0,0,0,.04) 1px,transparent 1px,transparent 4px)}
+.wrap{position:relative;z-index:1;max-width:460px;margin:0 auto;padding:0 14px}
+
+/* Header */
+.hdr{text-align:center;padding:24px 0 16px}
+.hdr h1{font-size:24px;font-weight:900;color:var(--gold);letter-spacing:6px;text-shadow:0 2px 16px rgba(0,0,0,.8)}
+.hdr p{font-size:10px;color:rgba(244,238,217,.45);letter-spacing:3px;margin-top:4px}
+
+/* Step bar */
+.stepbar{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:20px}
+.sdot{position:relative;width:30px;height:30px;border-radius:50%;border:2px solid var(--border);
+  display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;
+  color:rgba(244,238,217,.35);background:rgba(0,0,0,.4);transition:all .3s;flex-shrink:0}
+.sdot.active{border-color:var(--gold);color:var(--gold);background:rgba(201,168,76,.1)}
+.sdot.done{border-color:#2d6e3a;background:#1b4826;color:var(--gold)}
+.sdot .slbl{position:absolute;top:34px;white-space:nowrap;font-size:9px;color:rgba(244,238,217,.35);letter-spacing:.5px}
+.sdot.active .slbl{color:var(--gold)}
+.sline{flex:1;height:1px;background:var(--border);max-width:38px}
+
+/* Panel */
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;
+  padding:18px 16px;margin-bottom:14px;
+  box-shadow:0 4px 28px rgba(0,0,0,.5),inset 0 1px 0 rgba(201,168,76,.07);
+  backdrop-filter:blur(12px)}
+.ptitle{font-size:10px;font-weight:700;color:var(--gold);letter-spacing:3px;margin-bottom:15px}
+
+/* Toggle buttons */
+.trow{display:flex;gap:7px;margin-bottom:13px;flex-wrap:wrap}
+.tb{flex:1;min-width:0;padding:10px 5px;text-align:center;
+  background:rgba(255,255,255,.04);border:1.5px solid var(--border);
+  border-radius:8px;color:var(--ivory2);font-family:'Noto Serif TC',serif;
+  font-size:13px;cursor:pointer;transition:all .2s;line-height:1.35}
+.tb small{display:block;font-size:9px;opacity:.65;margin-top:2px}
+.tb.on{background:var(--gold);border-color:var(--gold);color:var(--dark);font-weight:700}
+.tb.on small{opacity:.7}
+.tb.red.on{background:var(--red);border-color:#a93226;color:#fff}
+
+/* Label */
+.lbl{font-size:10px;color:rgba(244,238,217,.5);letter-spacing:1.5px;margin-bottom:7px;display:block}
+
+/* Wind selector - round buttons */
+.winds{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:13px}
+.wb{padding:12px 4px;text-align:center;background:rgba(255,255,255,.04);
+  border:1.5px solid var(--border);border-radius:8px;color:var(--ivory2);
+  font-family:'Noto Serif TC',serif;font-size:16px;cursor:pointer;transition:all .2s}
+.wb.on{background:var(--gold);border-color:var(--gold);color:var(--dark);font-weight:900}
+.wb small{display:block;font-size:9px;margin-top:3px;opacity:.65}
+
+/* Round indicator — e.g. 東圈一局 */
+.round-display{
+  text-align:center;padding:14px;
+  background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.2);
+  border-radius:10px;margin-bottom:13px;
+}
+.round-big{font-size:22px;font-weight:900;color:var(--gold);letter-spacing:4px}
+.round-sub{font-size:10px;color:var(--ivory2);margin-top:4px;opacity:.6}
+
+/* Divider */
+.div{display:flex;align-items:center;gap:10px;margin:14px 0 13px}
+.div::before,.div::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
+.div span{font-size:11px;color:rgba(244,238,217,.35);letter-spacing:2px}
+
+/* Photo layout diagram */
+.photo-guide{
+  border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;
+  background:rgba(0,0,0,.3)
+}
+.pg-label{font-size:10px;color:var(--gold);letter-spacing:2px;padding:8px 12px;
+  background:rgba(201,168,76,.08);border-bottom:1px solid var(--border)}
+.pg-row{display:flex;align-items:stretch;border-bottom:1px solid rgba(201,168,76,.12)}
+.pg-row:last-child{border-bottom:none}
+.pg-tag{width:56px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  font-size:10px;color:var(--ivory2);letter-spacing:1px;border-right:1px solid rgba(201,168,76,.12);
+  padding:10px 6px;text-align:center;line-height:1.5;writing-mode:horizontal-tb}
+.pg-content{flex:1;padding:10px 10px;font-size:11px;color:rgba(244,238,217,.6);line-height:1.9}
+.pg-content em{color:var(--gold2);font-style:normal}
+.pg-divider{width:1px;background:rgba(201,168,76,.2);align-self:stretch}
+.pg-win{width:70px;flex-shrink:0;display:flex;align-items:center;justify-content:center;
+  border-left:1px solid rgba(201,168,76,.2);flex-direction:column;gap:4px;padding:8px 6px}
+.pg-win .wlbl{font-size:9px;color:var(--red);letter-spacing:1px;text-align:center}
+.tile-demo{display:inline-block;background:#f0e8d0;color:#222;border:1px solid #999;
+  border-radius:3px;font-size:14px;padding:2px 5px;margin:1px;border-bottom:2px solid #888}
+.tile-side{display:inline-block;background:#d4c9b0;color:#444;border:1px solid #888;
+  border-radius:3px;font-size:12px;padding:2px 4px;margin:1px;transform:rotate(90deg);
+  display:inline-block;border-bottom:2px solid #777}
+
+/* Upload */
+.upload-zone{border:2px dashed rgba(201,168,76,.3);border-radius:10px;padding:24px 16px;
+  text-align:center;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.upload-zone:hover,.upload-zone.drag{border-color:var(--gold);background:rgba(201,168,76,.04)}
+.upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.uico{font-size:32px;margin-bottom:8px}
+.utxt{font-size:14px;color:var(--gold2);font-weight:700}
+.usub{font-size:10px;color:rgba(244,238,217,.4);margin-top:5px}
+#pwrap{display:none;margin-top:12px;border-radius:8px;overflow:hidden;position:relative}
+#pimg{width:100%;display:block;border-radius:8px}
+.rmbtn{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.7);
+  border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:50%;
+  width:28px;height:28px;font-size:13px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center}
+
+/* Nav */
+.nav{display:flex;gap:10px;margin-top:4px}
+.bnext{flex:1;padding:15px;border:none;border-radius:10px;
+  background:linear-gradient(135deg,var(--gold),#8a6518);
+  color:var(--dark);font-family:'Noto Serif TC',serif;font-size:15px;font-weight:900;
+  letter-spacing:3px;cursor:pointer;transition:all .25s;
+  box-shadow:0 4px 18px rgba(201,168,76,.25)}
+.bnext:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(201,168,76,.4)}
+.bnext:active{transform:translateY(1px)}
+.bnext:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.bback{padding:15px 16px;border:1px solid var(--border);border-radius:10px;
+  background:rgba(255,255,255,.05);color:var(--ivory2);
+  font-family:'Noto Serif TC',serif;font-size:13px;cursor:pointer;transition:all .2s}
+.bback:hover{background:rgba(255,255,255,.09)}
+
+/* Loading */
+.loading{display:none;text-align:center;padding:44px 20px}
+.spinner{display:inline-block;width:44px;height:44px;
+  border:3px solid rgba(201,168,76,.12);border-top-color:var(--gold);
+  border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading p{margin-top:16px;font-size:11px;color:rgba(244,238,217,.45);letter-spacing:2px}
+
+/* Results */
+#sresult{display:none}
+.rcard{background:var(--panel);border:1px solid var(--border);border-radius:14px;
+  padding:18px 16px;margin-bottom:14px;
+  box-shadow:0 4px 28px rgba(0,0,0,.5);backdrop-filter:blur(12px)}
+.tiles-box{background:rgba(255,255,255,.03);border-radius:8px;padding:12px 14px;
+  margin-bottom:12px;font-size:13px;line-height:2;color:var(--ivory2)}
+.tiles-box strong{font-size:9px;color:var(--gold);letter-spacing:2px;display:block;margin-bottom:6px}
+.fitem{display:flex;justify-content:space-between;align-items:center;
+  padding:10px 13px;background:rgba(255,255,255,.04);border-radius:8px;
+  border-left:3px solid var(--gold);margin-bottom:7px;animation:si .3s ease both}
+@keyframes si{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.fname{font-size:14px;font-weight:700}
+.fdesc{font-size:10px;color:rgba(244,238,217,.4);margin-top:2px}
+.fpts{font-family:'Oswald',sans-serif;font-size:22px;font-weight:700;color:var(--gold)}
+.total-box{background:linear-gradient(135deg,rgba(201,168,76,.12),rgba(201,168,76,.03));
+  border:1px solid rgba(201,168,76,.4);border-radius:12px;padding:22px;text-align:center}
+.tlbl{font-size:9px;letter-spacing:4px;color:rgba(244,238,217,.5);margin-bottom:8px}
+.tnum{font-family:'Oswald',sans-serif;font-size:70px;font-weight:700;color:var(--gold);
+  line-height:1;text-shadow:0 0 28px rgba(201,168,76,.45)}
+.tunit{font-size:15px;color:rgba(244,238,217,.55);margin-top:4px}
+.nbox{margin-top:12px;padding:12px 13px;background:rgba(192,57,43,.1);
+  border:1px solid rgba(192,57,43,.28);border-radius:8px;
+  font-size:11px;color:rgba(244,238,217,.65);line-height:1.9}
+.nbox strong{color:#e74c3c;display:block;margin-bottom:3px}
+.ebox{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.3);
+  border-radius:8px;padding:14px;color:#e74c3c;font-size:13px;
+  text-align:center;display:none;margin-bottom:12px}
+.rbtn{width:100%;margin-top:12px;padding:13px;
+  background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);
+  border-radius:8px;color:rgba(244,238,217,.6);
+  font-family:'Noto Serif TC',serif;font-size:13px;cursor:pointer;transition:all .2s}
+.rbtn:hover{background:rgba(255,255,255,.09);color:var(--ivory)}
+
+.deco{text-align:center;font-size:10px;opacity:.15;letter-spacing:5px;margin:22px 0 6px}
+.screen{display:none}.screen.active{display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<div class="hdr"><h1>🀄 台灣牌計番</h1><p>港式台灣麻雀 · AI 識牌計番</p></div>
+
+<div class="stepbar">
+  <div class="sdot active" id="dot1">1<span class="slbl">局面資料</span></div>
+  <div class="sline"></div>
+  <div class="sdot" id="dot2">2<span class="slbl">上載圖片</span></div>
+  <div class="sline"></div>
+  <div class="sdot" id="dot3">3<span class="slbl">計番結果</span></div>
+</div>
+
+<!-- ══════ STEP 1 ══════ -->
+<div class="screen active" id="step1">
+
+  <div class="panel">
+    <div class="ptitle">🀄 咩圈咩局</div>
+
+    <span class="lbl">圈風</span>
+    <div class="trow">
+      <button class="tb on" data-g="circle" data-v="東" onclick="tog(this);updRound()">東圈</button>
+      <button class="tb" data-g="circle" data-v="南" onclick="tog(this);updRound()">南圈</button>
+      <button class="tb" data-g="circle" data-v="西" onclick="tog(this);updRound()">西圈</button>
+      <button class="tb" data-g="circle" data-v="北" onclick="tog(this);updRound()">北圈</button>
+    </div>
+
+    <span class="lbl">第幾局</span>
+    <div class="trow">
+      <button class="tb on" data-g="round" data-v="1" onclick="tog(this);updRound()">一局</button>
+      <button class="tb" data-g="round" data-v="2" onclick="tog(this);updRound()">二局</button>
+      <button class="tb" data-g="round" data-v="3" onclick="tog(this);updRound()">三局</button>
+      <button class="tb" data-g="round" data-v="4" onclick="tog(this);updRound()">四局</button>
+    </div>
+
+    <div class="round-display">
+      <div class="round-big" id="roundBig">東圈一局</div>
+      <div class="round-sub">東家係莊（東位）</div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle">🏆 食胡者</div>
+
+    <span class="lbl">食胡者係咪莊家（東位）？</span>
+    <div class="trow">
+      <button class="tb on" data-g="isBanker" data-v="yes" onclick="tog(this)">係，食胡者係莊<small>東位食胡</small></button>
+      <button class="tb" data-g="isBanker" data-v="no" onclick="tog(this)">唔係，食胡者係閒<small>南/西/北位食胡</small></button>
+    </div>
+
+    <div id="winnerWindRow">
+      <span class="lbl">食胡者係咩位（閒家）？</span>
+      <div class="winds" id="winnerWindBtns">
+        <button class="wb on" data-g="winner" data-v="南" onclick="tog(this)">南<small>下家</small></button>
+        <button class="wb" data-g="winner" data-v="西" onclick="tog(this)">西<small>對家</small></button>
+        <button class="wb" data-g="winner" data-v="北" onclick="tog(this)">北<small>上家</small></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle">💥 出沖者</div>
+    <span class="lbl">點食胡？</span>
+    <div class="trow">
+      <button class="tb on" data-g="winType" data-v="出沖" onclick="tog(this);updLoser()">出沖<small>其他家打出</small></button>
+      <button class="tb" data-g="winType" data-v="自摸" onclick="tog(this);updLoser()">自摸<small>自己摸出</small></button>
+    </div>
+
+    <div id="loserRow">
+      <span class="lbl">打出者係咩位？</span>
+      <div class="winds">
+        <button class="wb on" data-g="loser" data-v="東" onclick="tog(this)">東<small>莊家</small></button>
+        <button class="wb" data-g="loser" data-v="南" onclick="tog(this)">南<small>下家</small></button>
+        <button class="wb" data-g="loser" data-v="西" onclick="tog(this)">西<small>對家</small></button>
+        <button class="wb" data-g="loser" data-v="北" onclick="tog(this)">北<small>上家</small></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="nav"><button class="bnext" onclick="goStep(2)">下一步 →</button></div>
+</div>
+
+<!-- ══════ STEP 2 ══════ -->
+<div class="screen" id="step2">
+
+  <div class="panel">
+    <div class="ptitle">📷 點樣擺牌影相</div>
+
+    <div class="photo-guide">
+      <div class="pg-label">📐 擺牌格式（影之前請按呢個排法）</div>
+
+      <div class="pg-row">
+        <div class="pg-tag" style="font-size:11px;color:var(--gold2)">上行</div>
+        <div class="pg-content">
+          <em>花牌</em>（如有）&nbsp;&nbsp;｜&nbsp;&nbsp;<em>上咗嘅牌</em>（橫放）&nbsp;&nbsp;｜&nbsp;&nbsp;<em>碰咗嘅牌</em>（三張一組）&nbsp;&nbsp;｜&nbsp;&nbsp;<em>槓咗嘅牌</em>（四張一組）
+          <br><span style="opacity:.5;font-size:10px">呢行係已落地、其他家見到嘅牌</span>
+        </div>
+      </div>
+
+      <div class="pg-row">
+        <div class="pg-tag" style="font-size:11px;color:var(--ivory2)">下行</div>
+        <div class="pg-content" style="display:flex;align-items:center;gap:0;padding:10px">
+          <div style="flex:1">
+            <em>手裡嘅牌</em>（正排，由細到大）
+            <br><span style="opacity:.5;font-size:10px">食胡前手上嘅牌</span>
+          </div>
+          <div style="border-left:1px dashed rgba(201,168,76,.3);padding-left:10px;margin-left:10px;text-align:center">
+            <div style="font-size:10px;color:var(--red);margin-bottom:4px">食嗰隻</div>
+            <div style="font-size:20px">🀄</div>
+            <div style="font-size:9px;opacity:.5;margin-top:3px">分開放</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.15);border-radius:8px;padding:12px 13px;margin-bottom:14px">
+      <div style="font-size:10px;color:var(--gold);letter-spacing:2px;margin-bottom:8px">💡 拍攝貼士</div>
+      <div style="font-size:11px;color:var(--ivory2);line-height:2;opacity:.8">
+        · 光線要充足，避免陰影<br>
+        · 牌面正向，確保字清晰可見<br>
+        · 食嗰隻牌放係手牌右邊少少，分開少少距離<br>
+        · 上行同下行之間留少少空隙
+      </div>
+    </div>
+
+    <div class="upload-zone" id="uzone">
+      <input type="file" accept="image/*" capture="environment" id="finput">
+      <div class="uico">📷</div>
+      <div class="utxt">揀圖片 / 即影</div>
+      <div class="usub">支援 JPG · PNG · HEIC</div>
+    </div>
+    <div id="pwrap">
+      <img id="pimg" src="" alt="預覽">
+      <button class="rmbtn" onclick="rmImg()">✕</button>
+    </div>
+  </div>
+
+  <div class="nav">
+    <button class="bback" onclick="goStep(1)">← 返回</button>
+    <button class="bnext" id="abtn" onclick="doAnalyze()" disabled>識牌計番 🀄</button>
+  </div>
+</div>
+
+<!-- Loading -->
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <p>AI 分析牌面中⋯</p>
+</div>
+
+<!-- ══════ STEP 3 - Results ══════ -->
+<div id="sresult">
+  <div class="ebox" id="ebox"></div>
+  <div class="rcard">
+    <div class="ptitle">🔍 識別 &amp; 計番結果</div>
+    <div class="tiles-box">
+      <strong>上行（落地牌）</strong>
+      <span id="tilesTop"></span>
+    </div>
+    <div class="tiles-box">
+      <strong>下行（手牌 + 食嗰隻）</strong>
+      <span id="tilesBot"></span>
+    </div>
+    <div id="fanList"></div>
+    <div class="total-box">
+      <div class="tlbl">合計番數</div>
+      <div class="tnum" id="tnum">0</div>
+      <div class="tunit">番</div>
+    </div>
+    <div class="nbox" id="nbox" style="display:none">
+      <strong>⚠️ 備註</strong><span id="ntxt"></span>
+    </div>
+  </div>
+  <button class="rbtn" onclick="resetAll()">🔄 重新計算</button>
+</div>
+
+<div class="deco">🀇 🀈 🀉 🀊 🀋 🀌 🀍 🀎 🀏</div>
+</div>
+
+<script>
+const S = {
+  circle:'東', round:'1',
+  isBanker:'yes', winner:'南',
+  winType:'出沖', loser:'東',
+  imgData:null
+};
+
+const roundNames = ['一','二','三','四'];
+const windNames = {東:'東',南:'南',西:'西',北:'北'};
+
+function tog(btn){
+  const g=btn.dataset.g;
+  document.querySelectorAll(`[data-g="${g}"]`).forEach(b=>b.classList.remove('on'));
+  btn.classList.add('on');
+  S[g]=btn.dataset.v;
+  // show/hide winner wind row
+  if(g==='isBanker'){
+    document.getElementById('winnerWindRow').style.display = S.isBanker==='no'?'block':'none';
+  }
+}
+function getVal(g){
+  const b=document.querySelector(`[data-g="${g}"].on`);
+  return b?b.dataset.v:'';
+}
+function updRound(){
+  const c=getVal('circle'), r=getVal('round');
+  document.getElementById('roundBig').textContent=`${c}圈${roundNames[parseInt(r)-1]}局`;
+}
+function updLoser(){
+  document.getElementById('loserRow').style.display = S.winType==='自摸'?'none':'block';
+}
+
+// init
+document.getElementById('winnerWindRow').style.display='none'; // banker by default
+
+function goStep(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sresult').style.display='none';
+  document.getElementById('loading').style.display='none';
+  if(n<=2) document.getElementById(`step${n}`).classList.add('active');
+  [1,2,3].forEach(i=>{
+    const d=document.getElementById(`dot${i}`);
+    d.classList.remove('active','done');
+    if(i<n) d.classList.add('done');
+    else if(i===n) d.classList.add('active');
+  });
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// image upload
+document.getElementById('finput').addEventListener('change',function(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    S.imgData=ev.target.result;
+    document.getElementById('pimg').src=ev.target.result;
+    document.getElementById('pwrap').style.display='block';
+    document.getElementById('abtn').disabled=false;
+  };
+  r.readAsDataURL(f);
+});
+const uz=document.getElementById('uzone');
+uz.addEventListener('dragover',e=>{e.preventDefault();uz.classList.add('drag')});
+uz.addEventListener('dragleave',()=>uz.classList.remove('drag'));
+uz.addEventListener('drop',e=>{
+  e.preventDefault();uz.classList.remove('drag');
+  const f=e.dataTransfer.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>{
+    S.imgData=ev.target.result;
+    document.getElementById('pimg').src=ev.target.result;
+    document.getElementById('pwrap').style.display='block';
+    document.getElementById('abtn').disabled=false;
+  };
+  r.readAsDataURL(f);
+});
+function rmImg(){
+  S.imgData=null;
+  document.getElementById('pwrap').style.display='none';
+  document.getElementById('pimg').src='';
+  document.getElementById('finput').value='';
+  document.getElementById('abtn').disabled=true;
+}
+
+async function doAnalyze(){
+  if(!S.imgData) return;
+  document.getElementById('step2').classList.remove('active');
+  document.getElementById('loading').style.display='block';
+  document.getElementById('sresult').style.display='none';
+  document.getElementById('ebox').style.display='none';
+  [1,2].forEach(i=>{const d=document.getElementById(`dot${i}`);d.classList.remove('active');d.classList.add('done')});
+  document.getElementById('dot3').classList.add('active');
+
+  const base64=S.imgData.split(',')[1];
+  const mt=S.imgData.split(';')[0].split(':')[1];
+
+  const circle=getVal('circle');
+  const round=getVal('round');
+  const isBanker=getVal('isBanker')==='yes';
+  const winner=isBanker?'東':getVal('winner');
+  const winType=getVal('winType');
+  const loser=winType==='自摸'?'（自摸，無打出者）':getVal('loser')+'家打出';
+
+  // Figure out round wind (banker wind) = which wind is 莊
+  // In round 1 of East, banker=East. Round 2, banker=South etc.
+  const allWinds=['東','南','西','北'];
+  const circleIdx=allWinds.indexOf(circle);
+  const bankerWind=allWinds[(circleIdx*4+parseInt(round)-1)%4]; // simplified
+  // Actually: 東圈 rounds 1-4 → 東南西北 as banker. So round N → banker = allWinds[N-1]
+  const actualBankerWind=allWinds[parseInt(round)-1];
+
+  const prompt=`你係台灣麻雀（港式）計番專家。請識別呢張手牌圖片並計算番數。
+
+【圖片格式說明】
+圖片分兩行：
+- 上行：花牌、上咗嘅牌（橫放）、碰咗嘅牌（三張一組）、槓咗嘅牌（四張一組）— 即係已落地嘅牌
+- 下行：手裡嘅牌（正向排列），最右邊分開放嘅係食胡那隻牌
+
+【本局資料】
+- 圈風：${circle}圈（${circle}係圈風牌，計刻子可加番）
+- 第${roundNames[parseInt(round)-1]}局，莊家係${actualBankerWind}家（${actualBankerWind}係本局莊風牌）
+- 食胡者：${winner}家（${isBanker?'莊家':'閒家'}）
+- 食法：${winType}，${loser}
+- 食胡者正風位：${winner}（即${winner}牌係佢嘅正風牌）
+
+【計番規則 — 台灣麻雀港式番數表】
+花番：
+- 無花：+1番
+- 正花：花牌號碼同食胡者坐位相符，每張+2番
+- 爛花：花牌號碼唔同食胡者坐位，每張+1番
+
+風牌刻子（碰咗或暗刻）：
+- 圈風牌刻子（即${circle}）：若食胡者係${circle}家則係雙重正風+2番，否則+2番（圈風）
+- 食胡者正風牌刻子（即${winner}牌）：+2番
+- 其他風牌刻子（非圈風非正風）：+1番
+- 中、發、白刻子：各+2番
+
+基本番型：
+- 聽牌(叮)：+5番（如有）
+- 雞胡：+10番（食胡時不計莊前只得一番時）
+- 對碰：+1番
+- 假獨：+1番（可砌到叫單釣或偏章）
+- 獨獨：+2番（單釣或叫偏章）
+- 平胡：+3番（全順子，無刻子）
+- 將眼：+1番（以二、五或八做眼）
+- 老少：+2番（同門一二三加七八九）
+- 無字：+1番（無番子）
+- 無字花：+5番（無番子且無花，唔另計無字1+無花1）
+- 無字花平胡(大平糊)：+10番（無番子、無花、全順子）
+- 門清：+3番（門前清，暗槓亦可）
+- 自摸：+1番
+- 門清自摸：+5番（唔另計門清3+自摸1）
+- 海底撈月：+20番
+- 花上食胡：+1番
+- 槓上食胡：+1番
+- 搶槓食胡：+1番（唔算自摸）
+- 槓上槓食胡：+30番
+- 明槓：每個+1番
+- 暗槓：每個+2番
+
+暗刻：
+- 二暗刻：+3番 | 三暗刻：+10番 | 四暗刻：+30番 | 五暗刻：+80番
+
+同類組合：
+- 一般高：+3番（兩個同樣順子）
+- 三般高：+15番 | 四般高：+30番
+- 二相逢：+2番（兩門同數字順子）| 三相逢：+10番
+- 四同順：+20番 | 五同順：+40番
+- 二兄弟(刻)：+3番 | 小三兄弟：+10番 | 大三兄弟：+15番
+- 小三姊妹：+8番 | 大三姊妹：+15番
+- 四歸一：+5番 | 四歸二：+10番 | 四歸四：+20番
+
+龍與門色：
+- 明龍：+10番 | 暗龍：+20番 | 明雜龍：+8番 | 暗雜龍：+15番
+- 五門齊：+10番 | 缺一門：+5番 | 混一色：+30番 | 清一色：+80番
+
+么九：
+- 斷么：+5番 | 全帶混么：+10番 | 全帶么：+15番 | 混么：+30番 | 清么：+80番
+
+特殊胡型：
+- 對對胡：+30番 | 全求人：+15番 | 半求人：+8番
+- 七只內：+20番 | 十只內：+10番
+- 小三元：+20番 | 大三元：+40番
+- 小三風：+15番 | 大三風：+30番
+- 小四喜：+60番 | 大四喜：+80番
+- 十三么：+80番 | 十六不搭：+40番
+- 間間胡：+100番 | 嚦咕嚦咕：+40番
+- 一台花：+10番 | 兩台花(花胡)：+30番
+- 天胡：+100番 | 地胡：+80番 | 人胡：+80番
+- 莊家食胡額外：+1番
+
+請只回覆以下JSON格式，唔好任何其他文字：
+{
+  "tilesTop": "上行識別到嘅牌（花牌、上咗、碰咗、槓咗）",
+  "tilesBot": "下行識別到嘅手牌 + 食嗰隻（用｜隔開食嗰隻）",
+  "fans": [
+    {"name": "番型名稱", "points": 數字, "desc": "一句解釋"}
+  ],
+  "total": 總番數,
+  "notes": "備註或識別問題（冇就填null）"
+}`;
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514',
+        max_tokens:1200,
+        messages:[{role:'user',content:[
+          {type:'image',source:{type:'base64',media_type:mt,data:base64}},
+          {type:'text',text:prompt}
+        ]}]
+      })
+    });
+    const data=await resp.json();
+    const txt=(data.content||[]).map(b=>b.text||'').join('');
+    const clean=txt.replace(/```json|```/g,'').trim();
+    showResult(JSON.parse(clean));
+  }catch(e){
+    console.error(e);
+    document.getElementById('ebox').textContent='分析失敗，請重試。確保圖片清晰，光線充足。';
+    document.getElementById('ebox').style.display='block';
+    document.getElementById('sresult').style.display='block';
+  }finally{
+    document.getElementById('loading').style.display='none';
+  }
+}
+
+function showResult(r){
+  document.getElementById('tilesTop').textContent=r.tilesTop||'（上行未識別到）';
+  document.getElementById('tilesBot').textContent=r.tilesBot||'（下行未識別到）';
+  const fl=document.getElementById('fanList');
+  fl.innerHTML='';
+  (r.fans||[]).forEach((f,i)=>{
+    const d=document.createElement('div');
+    d.className='fitem';d.style.animationDelay=`${i*.06}s`;
+    d.innerHTML=`<div><div class="fname">${f.name}</div><div class="fdesc">${f.desc||''}</div></div><div class="fpts">${f.points}</div>`;
+    fl.appendChild(d);
+  });
+  document.getElementById('tnum').textContent=r.total||0;
+  const nb=document.getElementById('nbox');
+  if(r.notes){nb.style.display='block';document.getElementById('ntxt').textContent=r.notes;}
+  else nb.style.display='none';
+  document.getElementById('sresult').style.display='block';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+function resetAll(){
+  rmImg();
+  goStep(1);
+}
+</script>
+</body>
+</html>
